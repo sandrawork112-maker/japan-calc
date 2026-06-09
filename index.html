@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>向日選物自用成本售價計算機</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-blue: #1e3a8a;
@@ -17,7 +18,8 @@
         }
         
         body {
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            /* 全面套用日系手寫質感字體，若載具不支援則順向推播微軟正黑與蘋方 */
+            font-family: 'Zen Maru Gothic', 'Sawarabi Mincho', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
             background-color: var(--background-color);
             color: var(--text-dark);
             margin: 0;
@@ -45,15 +47,17 @@
             margin-bottom: 5px;
             font-size: 24px;
             font-weight: 800;
+            letter-spacing: 0.5px;
         }
 
         .brand-sub {
             text-align: center;
-            font-size: 14px;
+            font-size: 15px;
             color: var(--brand-orange);
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 15px;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
         }
 
         /* 模式切換按鈕 */
@@ -65,6 +69,7 @@
         }
 
         .mode-btn {
+            font-family: inherit;
             padding: 12px;
             background-color: #f1f5f9;
             color: #64748b;
@@ -113,6 +118,7 @@
         }
 
         input, select {
+            font-family: inherit;
             width: 100%;
             padding: 11px 14px;
             border: 1px solid #cbd5e1;
@@ -139,6 +145,7 @@
         }
 
         button.calc-btn {
+            font-family: inherit;
             width: 100%;
             padding: 14px;
             background-color: var(--brand-orange);
@@ -197,15 +204,13 @@
 
 <div class="container">
     <h2>向日選物自用成本售價計算機</h2>
-    <div class="brand-sub">SUNNY SELECT</div>
+    <div class="brand-sub">hemakawa store</div>
     
-    <!-- 核心功能一：雙模式切換 -->
     <div class="mode-switcher">
         <button type="button" class="mode-btn active" id="btnLive" onclick="switchMode('live')">✈️ 日本現場連線模式</button>
         <button type="button" class="mode-btn" id="btnOnline" onclick="switchMode('online')">💻 網購接單(集運)模式</button>
     </div>
 
-    <!-- 自動顯示當天即時匯率 -->
     <div class="rate-badge" id="liveRateBox">
         🔄 正在獲取今天日幣即時匯率...
     </div>
@@ -215,7 +220,6 @@
         <input type="number" id="jpPrice" placeholder="例如: 3000">
     </div>
 
-    <!-- 網購接單模式專用延伸欄位 -->
     <div class="online-only" id="onlineFields">
         <div class="grid-2">
             <div class="input-group">
@@ -276,7 +280,6 @@
 
     <button type="button" class="calc-btn" onclick="calculateAll()">一鍵精準分析售價與利潤</button>
 
-    <!-- 結果面板 -->
     <div id="resultPanel" style="display: none;">
         <div class="result-box">
             <div class="section-title bg-orange">🎯 開給客人的最終總報價 (已含運費與金流)</div>
@@ -333,7 +336,7 @@
     </div>
     
     <div class="note">
-        向日選物專屬商業公式（支援虛擬帳號15元低消機制）<br>
+        hemakawa store 專屬商業公式（支援虛擬帳號15元低消機制）<br>
         系統自動倒算金流手續費轉嫁給客戶，確保您的預期利潤「完全不被蚕食」。
     </div>
 </div>
@@ -395,7 +398,6 @@
         const gatewayType = document.getElementById('gatewayFee').value;
         const shipping = parseFloat(document.getElementById('shipping').value) || 0;
 
-        // 網購模式欄位
         const jpInternalShipping = currentMode === 'online' ? (parseFloat(document.getElementById('jpInternalShipping').value) || 0) : 0;
         const intlShipping = currentMode === 'online' ? (parseFloat(document.getElementById('intlShipping').value) || 0) : 0;
 
@@ -404,12 +406,9 @@
             return;
         }
 
-        // 1. 計算開給客人的商品台幣基礎售價
         const baseSellPrice = Math.round(jpPrice * sellRate);
-        // 網購模式額外把「日本境內運費」用報價匯率加給客人
         const baseJpInternalSell = Math.round(jpInternalShipping * sellRate);
 
-        // 2. 計算代購費利潤
         let serviceProfit = 0;
         if (profitType === 'fixed') {
             serviceProfit = parseFloat(document.getElementById('profitFixed').value) || 0;
@@ -418,39 +417,31 @@
             serviceProfit = Math.round((baseSellPrice + baseJpInternalSell) * (percent / 100));
         }
 
-        // 3. 設定金流基本費率
         let gatewayRate = 0;
         if (gatewayType === 'card') gatewayRate = 0.028;
         if (gatewayType === 'va') gatewayRate = 0.015;
 
-        // 4. 核心功能二：金流低消15元倒算防護邏輯
-        // 先用常規公式倒算總價
         const subTotal = baseSellPrice + baseJpInternalSell + serviceProfit + intlShipping + shipping;
         let finalTotal = Math.ceil(subTotal / (1 - gatewayRate));
         let gatewayFee = Math.round(finalTotal * gatewayRate);
 
-        // 如果是虛擬帳號(va)且反推的手續費未滿15元，強行以15元計收，並把差額補進總報價
         if (gatewayType === 'va' && gatewayFee < 15) {
             gatewayFee = 15;
-            finalTotal = subTotal + 15; // 總價直接等於基本花費加上15元低消
+            finalTotal = subTotal + 15;
         }
 
-        // 5. 真實成本計算 (使用真實成本匯率)
         const realGoodsCost = Math.round(jpPrice * costRate);
         const realJpInternalCost = Math.round(jpInternalShipping * costRate);
         const totalCost = realGoodsCost + realJpInternalCost + intlShipping + gatewayFee + shipping;
 
-        // 6. 淨利潤計算
         const exchangeProfit = (baseSellPrice + baseJpInternalSell) - (realGoodsCost + realJpInternalCost);
         const netProfit = finalTotal - totalCost;
 
-        // 7. 渲染畫面
         document.getElementById('outTotal').innerText = '$ ' + finalTotal.toLocaleString() + ' 元';
         document.getElementById('outRealCost').innerText = '$ ' + realGoodsCost.toLocaleString();
         document.getElementById('outJpInternalCost').innerText = '$ ' + realJpInternalCost.toLocaleString();
         document.getElementById('outIntlCost').innerText = '$ ' + intlShipping.toLocaleString();
         
-        // 顯示是否觸發低消
         if (gatewayType === 'va' && gatewayFee === 15 && (finalTotal * 0.015) < 15) {
             document.getElementById('outGatewayFee').innerText = '$ 15 (已觸發低消15元限制)';
         } else {
