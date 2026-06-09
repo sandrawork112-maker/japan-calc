@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日本代購精準定價與成本利潤分析儀</title>
+    <title>向日選物自用成本售價計算機</title>
     <style>
         :root {
-            --primary-color: #2b5797;
-            --secondary-color: #00aba9;
-            --background-color: #f5f6f8;
+            --primary-blue: #1e3a8a;      /* 專業深海藍 */
+            --secondary-blue: #3b82f6;    /* 亮麗天藍 */
+            --brand-orange: #f97316;      /* 活力暖橘 */
+            --hover-orange: #ea580c;      /* 深暖橘 */
+            --background-color: #f8fafc;  /* 舒適淺灰底 */
             --card-color: #ffffff;
-            --text-color: #333333;
-            --danger-color: #b91d47;
-            --success-color: #1e7e34;
+            --text-dark: #1e293b;
+            --success-green: #16a34a;
         }
         
         body {
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
             background-color: var(--background-color);
-            color: var(--text-color);
+            color: var(--text-dark);
             margin: 0;
             padding: 15px;
             display: flex;
@@ -29,41 +30,53 @@
 
         .container {
             background-color: var(--card-color);
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(30, 58, 138, 0.08);
+            padding: 30px;
             width: 100%;
             max-width: 520px;
             box-sizing: border-box;
+            border: 1px solid #e2e8f0;
         }
 
         h2 {
             text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-size: 22px;
+            color: var(--primary-blue);
+            margin-bottom: 5px;
+            font-size: 24px;
             letter-spacing: 1px;
+            font-weight: 800;
+        }
+
+        .brand-sub {
+            text-align: center;
+            font-size: 14px;
+            color: var(--brand-orange);
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
         }
 
         .rate-badge {
-            background-color: #e1f5fe;
-            color: #0288d1;
-            padding: 8px 12px;
-            border-radius: 8px;
+            background-color: #eff6ff;
+            color: var(--secondary-blue);
+            padding: 10px 12px;
+            border-radius: 10px;
             font-size: 13px;
             text-align: center;
             margin-bottom: 20px;
             font-weight: bold;
+            border: 1px solid #bfdbfe;
         }
 
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 14px;
         }
 
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         label {
@@ -71,106 +84,112 @@
             margin-bottom: 6px;
             font-weight: bold;
             font-size: 13px;
-            color: #555;
+            color: #475569;
         }
 
         input, select {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            padding: 11px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
             font-size: 15px;
             box-sizing: border-box;
             transition: all 0.3s;
+            color: var(--text-dark);
         }
 
         input:focus, select:focus {
-            border-color: var(--secondary-color);
+            border-color: var(--secondary-blue);
             outline: none;
-            box-shadow: 0 0 5px rgba(0, 171, 169, 0.3);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
         button {
             width: 100%;
-            padding: 12px;
-            background-color: var(--primary-color);
+            padding: 14px;
+            background-color: var(--brand-orange);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.1s;
             margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
         }
 
         button:hover {
-            background-color: #1e3d6b;
+            background-color: var(--hover-orange);
+        }
+
+        button:active {
+            transform: scale(0.98);
         }
 
         /* 報價與成本利潤面板 */
         .result-box {
             margin-top: 20px;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid #e2e8f0;
         }
 
         .section-title {
-            padding: 8px 12px;
+            padding: 10px 14px;
             font-size: 13px;
             font-weight: bold;
             color: white;
         }
-        .bg-blue { background-color: var(--primary-color); }
-        .bg-red { background-color: var(--danger-color); }
-        .bg-green { background-color: var(--success-color); }
+        .bg-blue { background-color: var(--primary-blue); }
+        .bg-orange { background-color: var(--brand-orange); }
+        .bg-green { background-color: var(--success-green); }
 
         .detail-body {
             background-color: #fff;
-            padding: 12px;
-            border: 1px solid #eee;
+            padding: 14px;
         }
 
         .result-item {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-size: 14px;
         }
         .result-item:last-child { margin-bottom: 0; }
 
         .highlight-text {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            color: var(--danger-color);
+            color: var(--brand-orange);
             text-align: center;
-            padding: 15px 0;
-            background-color: #fff0f3;
-            border: 1px solid #ffccd5;
+            padding: 18px 0;
+            background-color: #fff7ed;
+            border-top: 1px solid #ffedd5;
         }
 
         .profit-text {
             font-size: 18px;
             font-weight: bold;
-            color: var(--success-color);
+            color: var(--success-green);
         }
 
         .note {
             font-size: 11px;
-            color: #888;
-            margin-top: 15px;
+            color: #64748b;
+            margin-top: 20px;
             text-align: center;
-            line-height: 1.4;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🇯🇵 日本代購精準定價與利潤分析</h2>
+    <h2>向日選物自用成本售價計算機</h2>
+    <div class="brand-sub">SUNNY SELECT</div>
     
-    <!-- 自動顯示當天即時匯率 -->
     <div class="rate-badge" id="liveRateBox">
         🔄 正在獲取今天日幣即時匯率...
     </div>
@@ -227,16 +246,13 @@
 
     <button onclick="calculateAll()">一鍵精準分析售價與利潤</button>
 
-    <!-- 結果面板 -->
     <div id="resultPanel" style="display: none;">
         
-        <!-- 1. 客人看到的最終售價 -->
         <div class="result-box">
-            <div class="section-title bg-red">🎯 開給客人的最終總報價 (已含運費與金流)</div>
+            <div class="section-title bg-orange">🎯 開給客人的最終總報價 (已含運費與金流)</div>
             <div class="highlight-text" id="outTotal">$ 0</div>
         </div>
 
-        <!-- 2. 成本結構拆解 -->
         <div class="result-box">
             <div class="section-title bg-blue">📊 你的真實營運成本拆解</div>
             <div class="detail-body">
@@ -252,14 +268,13 @@
                     <span>台灣國內運費成本：</span>
                     <span id="outShippingCost">$ 0</span>
                 </div>
-                <div class="result-item" style="font-weight: bold; border-top: 1px solid #eee; padding-top: 6px; margin-top: 6px;">
+                <div class="result-item" style="font-weight: bold; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 8px; color: var(--primary-blue);">
                     <span>總支出成本合計：</span>
                     <span id="outTotalCost">$ 0</span>
                 </div>
             </div>
         </div>
 
-        <!-- 3. 賺多少錢分析 -->
         <div class="result-box">
             <div class="section-title bg-green">💰 這一單你放進口袋的淨利潤</div>
             <div class="detail-body">
@@ -271,7 +286,7 @@
                     <span>外加的代購服務費：</span>
                     <span id="outServiceProfit">$ 0</span>
                 </div>
-                <div class="result-item" style="border-top: 1px dashed #ccc; padding-top: 6px; margin-top: 6px;">
+                <div class="result-item" style="border-top: 1px dashed #cbd5e1; padding-top: 8px; margin-top: 8px;">
                     <span class="profit-text">實拿淨利潤總計：</span>
                     <span class="profit-text" id="outNetProfit">$ 0</span>
                 </div>
@@ -280,7 +295,7 @@
     </div>
     
     <div class="note">
-        ※ 核心轉嫁公式：最終總報價 = (報價匯率台幣售價 + 外加代購費 + 國內運費) / (1 - 金流費率)<br>
+        向日選物專屬商業公式：最終總報價 = (報價匯率台幣售價 + 外加代購費 + 國內運費) / (1 - 金流費率)<br>
         系統會自動用最終總報價扣除所有真實成本，為您算出最精準的淨利潤。
     </div>
 </div>
@@ -323,7 +338,7 @@
             return;
         }
 
-        // --- 1. 計算給客人的基礎台幣價格（使用報價匯率，如 0.28） ---
+        // --- 1. 計算給客人的基礎台幣價格（使用報價匯率） ---
         const baseSellPrice = Math.round(jpPrice * sellRate);
 
         // --- 2. 計算外加的代購費 ---
@@ -342,14 +357,12 @@
         // --- 4. 反推金流手續費 ---
         const gatewayFee = Math.round(finalTotal * gatewayRate);
 
-        // --- 5. 真實成本計算（使用你換匯的真實成本匯率，如 0.215） ---
+        // --- 5. 真實成本計算（使用你換匯的真實成本匯率） ---
         const realGoodsCost = Math.round(jpPrice * costRate);
         const totalCost = realGoodsCost + gatewayFee + shipping;
 
         // --- 6. 淨利潤計算 ---
-        // 匯差利潤 = 報價匯率台幣價格 - 真實成本價格
         const exchangeProfit = baseSellPrice - realGoodsCost;
-        // 實拿總利潤 = 最終總售價 - 總成本
         const netProfit = finalTotal - totalCost;
 
         // --- 7. 渲染到網頁畫面上 ---
