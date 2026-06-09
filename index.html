@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的日本代購精準定價計算器</title>
+    <style>
+        :root {
+            --primary-color: #4a7c59;
+            --secondary-color: #68b0ab;
+            --background-color: #faf9f6;
+            --card-color: #ffffff;
+            --text-color: #432818;
+        }
+        
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-color);
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+            padding: 30px;
+            width: 100%;
+            max-width: 480px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 6px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 5px rgba(104, 176, 171, 0.4);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #3b6346;
+        }
+
+        .result-box {
+            margin-top: 25px;
+            background-color: #f4f7f5;
+            border-left: 5px solid var(--primary-color);
+            padding: 15px;
+            border-radius: 4px 8px 8px 4px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .result-item.total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d90429;
+            border-top: 1px dashed #ccc;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+        .note {
+            font-size: 12px;
+            color: #888;
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🇯🇵 日本代購精準報價計算</h2>
+    
+    <div class="input-group">
+        <label for="jpPrice">日本商品含稅定價 (日幣 ¥)</label>
+        <input type="number" id="jpPrice" placeholder="例如: 3000" value="">
+    </div>
+
+    <div class="input-group">
+        <label for="exchangeRate">當前日幣匯率 (可自行調整)</label>
+        <input type="number" id="exchangeRate" step="0.0001" placeholder="例如: 0.2150" value="0.2150">
+    </div>
+
+    <div class="input-group">
+        <label for="profitType">利潤（代購費）計算方式</label>
+        <select id="profitType" onchange="toggleProfitInput()">
+            <option value="percent">按商品台幣總額抽成 (%)</option>
+            <option value="fixed">固定每件收取定額 (台幣)</option>
+        </select>
+    </div>
+
+    <div class="input-group" id="profitPercentGroup">
+        <label for="profitPercent">想抽成的利潤趴數 (%)</label>
+        <input type="number" id="profitPercent" placeholder="例如: 15" value="15">
+    </div>
+
+    <div class="input-group" id="profitFixedGroup" style="display: none;">
+        <label for="profitFixed">固定代購費 (台幣 $)</label>
+        <input type="number" id="profitFixed" placeholder="例如: 150" value="150">
+    </div>
+
+    <div class="input-group">
+        <label for="gatewayFee">第三方金流手續費 (藍新/綠界刷卡)</label>
+        <select id="gatewayFee">
+            <option value="0.028">藍新/綠界 線上刷卡 (2.8%)</option>
+            <option value="0.015">藍新/綠界 虛擬帳號/轉帳 (1.5%)</option>
+            <option value="0">無使用金流 (親友面交/個人轉帳 0%)</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label for="shipping">台灣國內運費 (台幣 $, 若已含在售價請填0)</label>
+        <input type="number" id="shipping" placeholder="例如: 賣貨便 38" value="38">
+    </div>
+
+    <button onclick="calculatePrice()">一鍵精準計算報價</button>
+
+    <div class="result-box" id="resultBox" style="display: none;">
+        <div class="result-item">
+            <span>商品折合台幣：</span>
+            <span id="resTwPrice">$0</span>
+        </div>
+        <div class="result-item">
+            <span>預期代購利潤：</span>
+            <span id="resProfit">$0</span>
+        </div>
+        <div class="result-item">
+            <span>金流平台抽成：</span>
+            <span id="resFee">$0</span>
+        </div>
+        <div class="result-item">
+            <span>台灣國內運費：</span>
+            <span id="resShipping">$0</span>
+        </div>
+        <div class="result-item total">
+            <span>最終對客報價：</span>
+            <span id="resTotal">$0</span>
+        </div>
+    </div>
+    
+    <div class="note">※ 報價已自動將金流手續費倒算轉嫁，確保利潤不被蠶食。</div>
+</div>
+
+<script>
+    function toggleProfitInput() {
+        const type = document.getElementById('profitType').value;
+        if (type === 'percent') {
+            document.getElementById('profitPercentGroup').style.display = 'block';
+            document.getElementById('profitFixedGroup').style.display = 'none';
+        } else {
+            document.getElementById('profitPercentGroup').style.display = 'none';
+            document.getElementById('profitFixedGroup').style.display = 'block';
+        }
+    }
+
+    function calculatePrice() {
+        // 讀取輸入值
+        const jpPrice = parseFloat(document.getElementById('jpPrice').value) || 0;
+        const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+        const profitType = document.getElementById('profitType').value;
+        const gatewayRate = parseFloat(document.getElementById('gatewayFee').value);
+        const shipping = parseFloat(document.getElementById('shipping').value) || 0;
+
+        if (jpPrice <= 0) {
+            alert('請輸入正確的日幣商品定價喔！');
+            return;
+        }
+
+        // 1. 計算基本商品台幣售價
+        const twPrice = Math.round(jpPrice * exchangeRate);
+
+        // 2. 計算代購基本利潤
+        let profit = 0;
+        if (profitType === 'percent') {
+            const percent = parseFloat(document.getElementById('profitPercent').value) || 0;
+            profit = Math.round(twPrice * (percent / 100));
+        } else {
+            profit = parseFloat(document.getElementById('profitFixed').value) || 0;
+        }
+
+        // 3. 倒算金流手續費轉嫁 (核心邏輯：確保扣完手續費後，實拿金額仍包含完整利潤)
+        // 公式：對客售價 = (商品成本 + 利潤 + 國內運費) / (1 - 金流費率)
+        const subTotal = twPrice + profit + shipping;
+        let finalTotal = Math.ceil(subTotal / (1 - gatewayRate));
+        
+        // 4. 反推金流收走的手續費
+        const gatewayFee = Math.round(finalTotal * gatewayRate);
+
+        // 顯示結果
+        document.getElementById('resTwPrice').innerText = '$ ' + twPrice.toLocaleString();
+        document.getElementById('resProfit').innerText = '$ ' + profit.toLocaleString();
+        document.getElementById('resFee').innerText = '$ ' + gatewayFee.toLocaleString();
+        document.getElementById('resShipping').innerText = '$ ' + shipping.toLocaleString();
+        document.getElementById('resTotal').innerText = '$ ' + finalTotal.toLocaleString();
+        
+        document.getElementById('resultBox').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
