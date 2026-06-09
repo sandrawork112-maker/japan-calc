@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的日本代購精準定價計算器</title>
+    <title>日本代購精準定價與成本利潤分析儀</title>
     <style>
         :root {
-            --primary-color: #4a7c59;
-            --secondary-color: #68b0ab;
-            --background-color: #faf9f6;
+            --primary-color: #2b5797;
+            --secondary-color: #00aba9;
+            --background-color: #f5f6f8;
             --card-color: #ffffff;
-            --text-color: #432818;
+            --text-color: #333333;
+            --danger-color: #b91d47;
+            --success-color: #1e7e34;
         }
         
         body {
@@ -18,7 +20,7 @@
             background-color: var(--background-color);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,39 +30,56 @@
         .container {
             background-color: var(--card-color);
             border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.05);
-            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            padding: 25px;
             width: 100%;
-            max-width: 480px;
+            max-width: 520px;
             box-sizing: border-box;
         }
 
         h2 {
             text-align: center;
             color: var(--primary-color);
-            margin-bottom: 25px;
-            font-size: 24px;
+            margin-bottom: 20px;
+            font-size: 22px;
             letter-spacing: 1px;
         }
 
+        .rate-badge {
+            background-color: #e1f5fe;
+            color: #0288d1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
         .input-group {
-            margin-bottom: 18px;
+            margin-bottom: 15px;
         }
 
         label {
             display: block;
             margin-bottom: 6px;
-            font-weight: 6px;
-            font-size: 14px;
+            font-weight: bold;
+            font-size: 13px;
             color: #555;
         }
 
         input, select {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             box-sizing: border-box;
             transition: all 0.3s;
         }
@@ -68,17 +87,17 @@
         input:focus, select:focus {
             border-color: var(--secondary-color);
             outline: none;
-            box-shadow: 0 0 5px rgba(104, 176, 171, 0.4);
+            box-shadow: 0 0 5px rgba(0, 171, 169, 0.3);
         }
 
         button {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             background-color: var(--primary-color);
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.3s;
@@ -86,169 +105,268 @@
         }
 
         button:hover {
-            background-color: #3b6346;
+            background-color: #1e3d6b;
         }
 
+        /* 報價與成本利潤面板 */
         .result-box {
-            margin-top: 25px;
-            background-color: #f4f7f5;
-            border-left: 5px solid var(--primary-color);
-            padding: 15px;
-            border-radius: 4px 8px 8px 4px;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+        }
+        .bg-blue { background-color: var(--primary-color); }
+        .bg-red { background-color: var(--danger-color); }
+        .bg-green { background-color: var(--success-color); }
+
+        .detail-body {
+            background-color: #fff;
+            padding: 12px;
+            border: 1px solid #eee;
         }
 
         .result-item {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 15px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .result-item:last-child { margin-bottom: 0; }
+
+        .highlight-text {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--danger-color);
+            text-align: center;
+            padding: 15px 0;
+            background-color: #fff0f3;
+            border: 1px solid #ffccd5;
         }
 
-        .result-item.total {
-            font-size: 20px;
+        .profit-text {
+            font-size: 18px;
             font-weight: bold;
-            color: #d90429;
-            border-top: 1px dashed #ccc;
-            padding-top: 10px;
-            margin-top: 10px;
+            color: var(--success-color);
         }
 
         .note {
-            font-size: 12px;
+            font-size: 11px;
             color: #888;
             margin-top: 15px;
             text-align: center;
+            line-height: 1.4;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🇯🇵 日本代購精準報價計算</h2>
+    <h2>🇯🇵 日本代購精準定價與利潤分析</h2>
+    
+    <!-- 自動顯示當天即時匯率 -->
+    <div class="rate-badge" id="liveRateBox">
+        🔄 正在獲取今天日幣即時匯率...
+    </div>
     
     <div class="input-group">
         <label for="jpPrice">日本商品含稅定價 (日幣 ¥)</label>
-        <input type="number" id="jpPrice" placeholder="例如: 3000" value="">
+        <input type="number" id="jpPrice" placeholder="例如: 3000">
+    </div>
+
+    <div class="grid-2">
+        <div class="input-group">
+            <label for="costRate">真實換匯成本匯率</label>
+            <input type="number" id="costRate" step="0.0001" placeholder="例如: 0.2150">
+        </div>
+        <div class="input-group">
+            <label for="sellRate">想開給客人的報價匯率</label>
+            <input type="number" id="sellRate" step="0.0001" placeholder="例如: 0.28或0.3" value="0.28">
+        </div>
     </div>
 
     <div class="input-group">
-        <label for="exchangeRate">當前日幣匯率 (可自行調整)</label>
-        <input type="number" id="exchangeRate" step="0.0001" placeholder="例如: 0.2150" value="0.2150">
-    </div>
-
-    <div class="input-group">
-        <label for="profitType">利潤（代購費）計算方式</label>
+        <label for="profitType">額外利潤（代購費）計算方式</label>
         <select id="profitType" onchange="toggleProfitInput()">
-            <option value="percent">按商品台幣總額抽成 (%)</option>
-            <option value="fixed">固定每件收取定額 (台幣)</option>
+            <option value="none">無外加代購費（純賺匯差）</option>
+            <option value="fixed">固定每件外加定額利潤 (台幣)</option>
+            <option value="percent">按客人售價外加抽成 (%)</option>
         </select>
-    </div>
-
-    <div class="input-group" id="profitPercentGroup">
-        <label for="profitPercent">想抽成的利潤趴數 (%)</label>
-        <input type="number" id="profitPercent" placeholder="例如: 15" value="15">
     </div>
 
     <div class="input-group" id="profitFixedGroup" style="display: none;">
-        <label for="profitFixed">固定代購費 (台幣 $)</label>
-        <input type="number" id="profitFixed" placeholder="例如: 150" value="150">
+        <label for="profitFixed">外加固定代購費 (台幣 $)</label>
+        <input type="number" id="profitFixed" placeholder="例如: 100" value="100">
     </div>
 
-    <div class="input-group">
-        <label for="gatewayFee">第三方金流手續費 (藍新/綠界刷卡)</label>
-        <select id="gatewayFee">
-            <option value="0.028">藍新/綠界 線上刷卡 (2.8%)</option>
-            <option value="0.015">藍新/綠界 虛擬帳號/轉帳 (1.5%)</option>
-            <option value="0">無使用金流 (親友面交/個人轉帳 0%)</option>
-        </select>
+    <div class="input-group" id="profitPercentGroup" style="display: none;">
+        <label for="profitPercent">外加抽成趴數 (%)</label>
+        <input type="number" id="profitPercent" placeholder="例如: 10" value="10">
     </div>
 
-    <div class="input-group">
-        <label for="shipping">台灣國內運費 (台幣 $, 若已含在售價請填0)</label>
-        <input type="number" id="shipping" placeholder="例如: 賣貨便 38" value="38">
+    <div class="grid-2">
+        <div class="input-group">
+            <label for="gatewayFee">第三方金流服務</label>
+            <select id="gatewayFee">
+                <option value="0.028">藍新/綠界 刷卡 (2.8%)</option>
+                <option value="0.015">藍新/綠界 虛擬帳號 (1.5%)</option>
+                <option value="0">無使用金流 (0%)</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="shipping">台灣國內運費 (台幣)</label>
+            <input type="number" id="shipping" value="38">
+        </div>
     </div>
 
-    <button onclick="calculatePrice()">一鍵精準計算報價</button>
+    <button onclick="calculateAll()">一鍵精準分析售價與利潤</button>
 
-    <div class="result-box" id="resultBox" style="display: none;">
-        <div class="result-item">
-            <span>商品折合台幣：</span>
-            <span id="resTwPrice">$0</span>
+    <!-- 結果面板 -->
+    <div id="resultPanel" style="display: none;">
+        
+        <!-- 1. 客人看到的最終售價 -->
+        <div class="result-box">
+            <div class="section-title bg-red">🎯 開給客人的最終總報價 (已含運費與金流)</div>
+            <div class="highlight-text" id="outTotal">$ 0</div>
         </div>
-        <div class="result-item">
-            <span>預期代購利潤：</span>
-            <span id="resProfit">$0</span>
+
+        <!-- 2. 成本結構拆解 -->
+        <div class="result-box">
+            <div class="section-title bg-blue">📊 你的真實營運成本拆解</div>
+            <div class="detail-body">
+                <div class="result-item">
+                    <span>商品日幣換算真實台幣成本：</span>
+                    <span id="outRealCost">$ 0</span>
+                </div>
+                <div class="result-item">
+                    <span>金流平台收走的手續費：</span>
+                    <span id="outGatewayFee">$ 0</span>
+                </div>
+                <div class="result-item">
+                    <span>台灣國內運費成本：</span>
+                    <span id="outShippingCost">$ 0</span>
+                </div>
+                <div class="result-item" style="font-weight: bold; border-top: 1px solid #eee; padding-top: 6px; margin-top: 6px;">
+                    <span>總支出成本合計：</span>
+                    <span id="outTotalCost">$ 0</span>
+                </div>
+            </div>
         </div>
-        <div class="result-item">
-            <span>金流平台抽成：</span>
-            <span id="resFee">$0</span>
-        </div>
-        <div class="result-item">
-            <span>台灣國內運費：</span>
-            <span id="resShipping">$0</span>
-        </div>
-        <div class="result-item total">
-            <span>最終對客報價：</span>
-            <span id="resTotal">$0</span>
+
+        <!-- 3. 賺多少錢分析 -->
+        <div class="result-box">
+            <div class="section-title bg-green">💰 這一單你放進口袋的淨利潤</div>
+            <div class="detail-body">
+                <div class="result-item">
+                    <span>純匯差賺到的利潤：</span>
+                    <span id="outExchangeProfit">$ 0</span>
+                </div>
+                <div class="result-item">
+                    <span>外加的代購服務費：</span>
+                    <span id="outServiceProfit">$ 0</span>
+                </div>
+                <div class="result-item" style="border-top: 1px dashed #ccc; padding-top: 6px; margin-top: 6px;">
+                    <span class="profit-text">實拿淨利潤總計：</span>
+                    <span class="profit-text" id="outNetProfit">$ 0</span>
+                </div>
+            </div>
         </div>
     </div>
     
-    <div class="note">※ 報價已自動將金流手續費倒算轉嫁，確保利潤不被蠶食。</div>
+    <div class="note">
+        ※ 核心轉嫁公式：最終總報價 = (報價匯率台幣售價 + 外加代購費 + 國內運費) / (1 - 金流費率)<br>
+        系統會自動用最終總報價扣除所有真實成本，為您算出最精準的淨利潤。
+    </div>
 </div>
 
 <script>
-    function toggleProfitInput() {
-        const type = document.getElementById('profitType').value;
-        if (type === 'percent') {
-            document.getElementById('profitPercentGroup').style.display = 'block';
-            document.getElementById('profitFixedGroup').style.display = 'none';
-        } else {
-            document.getElementById('profitPercentGroup').style.display = 'none';
-            document.getElementById('profitFixedGroup').style.display = 'block';
-        }
+    // 網頁開啟時，自動向公開 API 抓取日幣對台幣的即時匯率
+    window.onload = function() {
+        fetch('https://open.er-api.com/v6/latest/JPY')
+            .then(response => response.json())
+            .then(data => {
+                const rateTWD = data.rates.TWD;
+                if(rateTWD) {
+                    const formattedRate = rateTWD.toFixed(4);
+                    document.getElementById('liveRateBox').innerHTML = `📈 今日日幣即時匯率參考成本：<b>${formattedRate}</b> (已自動同步)`;
+                    document.getElementById('costRate').value = formattedRate;
+                }
+            })
+            .catch(error => {
+                document.getElementById('liveRateBox').innerHTML = `⚠️ 無法自動更新匯率，請手動輸入成本匯率（例如 0.2150）`;
+                document.getElementById('costRate').value = "0.2150";
+            });
     }
 
-    function calculatePrice() {
-        // 讀取輸入值
+    function toggleProfitInput() {
+        const type = document.getElementById('profitType').value;
+        document.getElementById('profitFixedGroup').style.display = (type === 'fixed') ? 'block' : 'none';
+        document.getElementById('profitPercentGroup').style.display = (type === 'percent') ? 'block' : 'none';
+    }
+
+    function calculateAll() {
         const jpPrice = parseFloat(document.getElementById('jpPrice').value) || 0;
-        const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 0;
+        const costRate = parseFloat(document.getElementById('costRate').value) || 0;
+        const sellRate = parseFloat(document.getElementById('sellRate').value) || 0;
         const profitType = document.getElementById('profitType').value;
         const gatewayRate = parseFloat(document.getElementById('gatewayFee').value);
         const shipping = parseFloat(document.getElementById('shipping').value) || 0;
 
         if (jpPrice <= 0) {
-            alert('請輸入正確的日幣商品定價喔！');
+            alert('請輸入正確的日幣商品含稅定價喔！');
             return;
         }
 
-        // 1. 計算基本商品台幣售價
-        const twPrice = Math.round(jpPrice * exchangeRate);
+        // --- 1. 計算給客人的基礎台幣價格（使用報價匯率，如 0.28） ---
+        const baseSellPrice = Math.round(jpPrice * sellRate);
 
-        // 2. 計算代購基本利潤
-        let profit = 0;
-        if (profitType === 'percent') {
+        // --- 2. 計算外加的代購費 ---
+        let serviceProfit = 0;
+        if (profitType === 'fixed') {
+            serviceProfit = parseFloat(document.getElementById('profitFixed').value) || 0;
+        } else if (profitType === 'percent') {
             const percent = parseFloat(document.getElementById('profitPercent').value) || 0;
-            profit = Math.round(twPrice * (percent / 100));
-        } else {
-            profit = parseFloat(document.getElementById('profitFixed').value) || 0;
+            serviceProfit = Math.round(baseSellPrice * (percent / 100));
         }
 
-        // 3. 倒算金流手續費轉嫁 (核心邏輯：確保扣完手續費後，實拿金額仍包含完整利潤)
-        // 公式：對客售價 = (商品成本 + 利潤 + 國內運費) / (1 - 金流費率)
-        const subTotal = twPrice + profit + shipping;
+        // --- 3. 倒算包含金流手續費轉嫁的「最終總報價」 ---
+        const subTotal = baseSellPrice + serviceProfit + shipping;
         let finalTotal = Math.ceil(subTotal / (1 - gatewayRate));
         
-        // 4. 反推金流收走的手續費
+        // --- 4. 反推金流手續費 ---
         const gatewayFee = Math.round(finalTotal * gatewayRate);
 
-        // 顯示結果
-        document.getElementById('resTwPrice').innerText = '$ ' + twPrice.toLocaleString();
-        document.getElementById('resProfit').innerText = '$ ' + profit.toLocaleString();
-        document.getElementById('resFee').innerText = '$ ' + gatewayFee.toLocaleString();
-        document.getElementById('resShipping').innerText = '$ ' + shipping.toLocaleString();
-        document.getElementById('resTotal').innerText = '$ ' + finalTotal.toLocaleString();
+        // --- 5. 真實成本計算（使用你換匯的真實成本匯率，如 0.215） ---
+        const realGoodsCost = Math.round(jpPrice * costRate);
+        const totalCost = realGoodsCost + gatewayFee + shipping;
+
+        // --- 6. 淨利潤計算 ---
+        // 匯差利潤 = 報價匯率台幣價格 - 真實成本價格
+        const exchangeProfit = baseSellPrice - realGoodsCost;
+        // 實拿總利潤 = 最終總售價 - 總成本
+        const netProfit = finalTotal - totalCost;
+
+        // --- 7. 渲染到網頁畫面上 ---
+        document.getElementById('outTotal').innerText = '$ ' + finalTotal.toLocaleString() + ' 元';
         
-        document.getElementById('resultBox').style.display = 'block';
+        // 成本區
+        document.getElementById('outRealCost').innerText = '$ ' + realGoodsCost.toLocaleString();
+        document.getElementById('outGatewayFee').innerText = '$ ' + gatewayFee.toLocaleString();
+        document.getElementById('outShippingCost').innerText = '$ ' + shipping.toLocaleString();
+        document.getElementById('outTotalCost').innerText = '$ ' + totalCost.toLocaleString();
+        
+        // 利潤區
+        document.getElementById('outExchangeProfit').innerText = '$ ' + exchangeProfit.toLocaleString();
+        document.getElementById('outServiceProfit').innerText = '$ ' + serviceProfit.toLocaleString();
+        document.getElementById('outNetProfit').innerText = '$ ' + netProfit.toLocaleString() + ' 元';
+
+        document.getElementById('resultPanel').style.display = 'block';
     }
 </script>
 
