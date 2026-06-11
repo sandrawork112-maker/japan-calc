@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>向日選物自用成本售價計算機</title>
+    
+    <link rel="icon" type="image/jpeg" href="icon.jpg?v=999">
+    <link rel="apple-touch-icon" href="icon.jpg?v=999">
+
     <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,10 +19,10 @@
             --card-color: #ffffff;
             --text-dark: #1e293b;
             --success-green: #16a34a;
+            --purple-fixed: #6d28d9;
         }
         
         body {
-            /* 全面套用日系手寫質感字體，若載具不支援則順向推播微軟正黑與蘋方 */
             font-family: 'Zen Maru Gothic', 'Sawarabi Mincho', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
             background-color: var(--background-color);
             color: var(--text-dark);
@@ -58,6 +62,39 @@
             margin-bottom: 15px;
             letter-spacing: 3px;
             text-transform: uppercase;
+        }
+
+        /* 成本攤平區塊專用樣式 */
+        .amortize-box {
+            background-color: #f3e8ff;
+            border: 1px solid #d8b4fe;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .amortize-title {
+            font-weight: bold;
+            color: var(--purple-fixed);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .amortize-content {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .amortize-result {
+            background-color: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            border: 1px dashed #c084fc;
         }
 
         /* 模式切換按鈕 */
@@ -160,10 +197,23 @@
             box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
         }
 
+        button.calc-btn-purple {
+            font-family: inherit;
+            width: 100%;
+            padding: 10px;
+            background-color: var(--purple-fixed);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
         button.calc-btn:hover { background-color: var(--hover-orange); }
         button.calc-btn:active { transform: scale(0.98); }
 
-        /* 結果面板 */
         .result-box {
             margin-top: 20px;
             border-radius: 12px;
@@ -205,6 +255,37 @@
 <div class="container">
     <h2>向日選物自用成本售價計算機</h2>
     <div class="brand-sub">hemakawa store</div>
+    
+    <div class="amortize-box">
+        <div class="amortize-title" onclick="toggleAmortizePanel()">
+            <span>✈️ 本趟開團固定成本分攤規劃 (點擊展開/收合)</span>
+            <span id="amortizeArrow">▼</span>
+        </div>
+        <div class="amortize-content" id="amortizePanel">
+            <div class="grid-2">
+                <div class="input-group">
+                    <label for="fixedCost">本團固定開銷 (機票/住宿/網路)</label>
+                    <input type="number" id="fixedCost" value="15000" placeholder="例如: 15000">
+                </div>
+                <div class="input-group">
+                    <label for="targetCount">預計本次連線總接單件數</label>
+                    <input type="number" id="targetCount" value="100" placeholder="例如: 100">
+                </div>
+            </div>
+            <button type="button" class="calc-btn-purple" onclick="calculateAmortize()">計算攤平指標</button>
+            
+            <div class="amortize-result" id="amortizeResult" style="display: none;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>📐 每件商品應分攤固定成本：</span>
+                    <b id="perItemShare" style="color: var(--purple-fixed);">$ 0 元</b>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>🏁 本趟開團絕對損益兩平點：</span>
+                    <b id="breakEvenPoint" style="color: var(--success-green);">總淨利達 $ 0 元</b>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div class="mode-switcher">
         <button type="button" class="mode-btn active" id="btnLive" onclick="switchMode('live')">✈️ 日本現場連線模式</button>
@@ -359,6 +440,36 @@
                 document.getElementById('liveRateBox').innerHTML = `⚠️ 無法自動更新匯率，請手動輸入成本匯率`;
                 document.getElementById('costRate').value = "0.2150";
             });
+    }
+
+    // 控制攤平控制面板的展開收合
+    function toggleAmortizePanel() {
+        const panel = document.getElementById('amortizePanel');
+        const arrow = document.getElementById('amortizeArrow');
+        if (panel.style.display === 'block') {
+            panel.style.display = 'none';
+            arrow.innerText = '▼';
+        } else {
+            panel.style.display = 'block';
+            arrow.innerText = '▲';
+        }
+    }
+
+    // 計算攤平
+    function calculateAmortize() {
+        const fixedCost = parseFloat(document.getElementById('fixedCost').value) || 0;
+        const targetCount = parseFloat(document.getElementById('targetCount').value) || 0;
+        
+        if (targetCount <= 0) {
+            alert('預計接單件數必須大於 0 喔！');
+            return;
+        }
+
+        const perShare = Math.ceil(fixedCost / targetCount);
+        
+        document.getElementById('perItemShare').innerText = '$ ' + perShare.toLocaleString() + ' 元';
+        document.getElementById('breakEvenPoint').innerText = '總淨利達 $' + fixedCost.toLocaleString() + ' 元';
+        document.getElementById('amortizeResult').style.display = 'block';
     }
 
     function switchMode(mode) {
