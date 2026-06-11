@@ -20,6 +20,7 @@
             --text-dark: #1e293b;
             --success-green: #16a34a;
             --purple-fixed: #6d28d9;
+            --purple-light: #f3e8ff;
         }
         
         body {
@@ -66,7 +67,7 @@
 
         /* 成本攤平區塊專用樣式 */
         .amortize-box {
-            background-color: #f3e8ff;
+            background-color: var(--purple-light);
             border: 1px solid #d8b4fe;
             border-radius: 12px;
             padding: 15px;
@@ -247,6 +248,8 @@
         }
 
         .profit-text { font-size: 18px; font-weight: bold; color: var(--success-green); }
+        .purple-profit-text { font-size: 16px; font-weight: bold; color: var(--purple-fixed); }
+        
         .note { font-size: 11px; color: #64748b; margin-top: 20px; text-align: center; line-height: 1.5; }
     </style>
 </head>
@@ -412,6 +415,10 @@
                     <span class="profit-text">實拿淨利潤總計：</span>
                     <span class="profit-text" id="outNetProfit">$ 0</span>
                 </div>
+                <div class="result-item" style="border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 6px;">
+                    <span class="purple-profit-text">扣除應分攤成本後之純利：</span>
+                    <span class="purple-profit-text" id="outPureProfit">$ 0 元</span>
+                </div>
             </div>
         </div>
     </div>
@@ -424,6 +431,7 @@
 
 <script>
     let currentMode = 'live';
+    let globalPerItemShare = 0; // 全域變數，用來紀錄每件要分攤的台幣金額
 
     window.onload = function() {
         fetch('https://open.er-api.com/v6/latest/JPY')
@@ -465,11 +473,16 @@
             return;
         }
 
-        const perShare = Math.ceil(fixedCost / targetCount);
+        globalPerItemShare = Math.ceil(fixedCost / targetCount);
         
-        document.getElementById('perItemShare').innerText = '$ ' + perShare.toLocaleString() + ' 元';
+        document.getElementById('perItemShare').innerText = '$ ' + globalPerItemShare.toLocaleString() + ' 元';
         document.getElementById('breakEvenPoint').innerText = '總淨利達 $' + fixedCost.toLocaleString() + ' 元';
         document.getElementById('amortizeResult').style.display = 'block';
+
+        // 如果下方已經算過結果，同步更新下方的扣除純利
+        if(document.getElementById('resultPanel').style.display === 'block') {
+            updatePureProfitDisplay();
+        }
     }
 
     function switchMode(mode) {
@@ -499,6 +512,16 @@
         const type = document.getElementById('profitType').value;
         document.getElementById('profitFixedGroup').style.display = (type === 'fixed') ? 'block' : 'none';
         document.getElementById('profitPercentGroup').style.display = (type === 'percent') ? 'block' : 'none';
+    }
+
+    // 獨立更新純利欄位的函數
+    function updatePureProfitDisplay() {
+        const netProfitText = document.getElementById('outNetProfit').innerText;
+        // 把文字中的 $ 和 元、逗號拿掉，還原成數字
+        const netProfitNum = parseInt(netProfitText.replace(/[^0-9-]/g, '')) || 0;
+        const pureProfit = netProfitNum - globalPerItemShare;
+        
+        document.getElementById('outPureProfit').innerText = '$ ' + pureProfit.toLocaleString() + ' 元';
     }
 
     function calculateAll() {
@@ -564,6 +587,9 @@
         document.getElementById('outExchangeProfit').innerText = '$ ' + exchangeProfit.toLocaleString();
         document.getElementById('outServiceProfit').innerText = '$ ' + serviceProfit.toLocaleString();
         document.getElementById('outNetProfit').innerText = '$ ' + netProfit.toLocaleString() + ' 元';
+
+        // 執行更新「扣除應分攤成本後之純利」
+        updatePureProfitDisplay();
 
         document.getElementById('resultPanel').style.display = 'block';
     }
