@@ -65,39 +65,6 @@
             text-transform: uppercase;
         }
 
-        /* 成本攤平區塊專用樣式 */
-        .amortize-box {
-            background-color: var(--purple-light);
-            border: 1px solid #d8b4fe;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-
-        .amortize-title {
-            font-weight: bold;
-            color: var(--purple-fixed);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .amortize-content {
-            margin-top: 12px;
-            display: none;
-        }
-
-        .amortize-result {
-            background-color: white;
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 13px;
-            border: 1px dashed #c084fc;
-        }
-
         /* 模式切換按鈕 */
         .mode-switcher {
             display: grid;
@@ -123,6 +90,40 @@
             background-color: var(--primary-blue);
             color: white;
             border-color: var(--primary-blue);
+        }
+
+        /* 成本攤平區塊專用樣式 */
+        .amortize-box {
+            background-color: var(--purple-light);
+            border: 1px solid #d8b4fe;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: block; /* 預設連線模式顯示 */
+        }
+
+        .amortize-title {
+            font-weight: bold;
+            color: var(--purple-fixed);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .amortize-content {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .amortize-result {
+            background-color: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            border: 1px dashed #c084fc;
         }
 
         .rate-badge {
@@ -259,7 +260,12 @@
     <h2>向日選物自用成本售價計算機</h2>
     <div class="brand-sub">hemakawa store</div>
     
-    <div class="amortize-box">
+    <div class="mode-switcher">
+        <button type="button" class="mode-btn active" id="btnLive" onclick="switchMode('live')">✈️ 日本現場連線模式</button>
+        <button type="button" class="mode-btn" id="btnOnline" onclick="switchMode('online')">💻 網購接單(集運)模式</button>
+    </div>
+
+    <div class="amortize-box" id="amortizeMainBox">
         <div class="amortize-title" onclick="toggleAmortizePanel()">
             <span>✈️ 本趟開團固定成本分攤規劃 (點擊展開/收合)</span>
             <span id="amortizeArrow">▼</span>
@@ -288,11 +294,6 @@
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div class="mode-switcher">
-        <button type="button" class="mode-btn active" id="btnLive" onclick="switchMode('live')">✈️ 日本現場連線模式</button>
-        <button type="button" class="mode-btn" id="btnOnline" onclick="switchMode('online')">💻 網購接單(集運)模式</button>
     </div>
 
     <div class="rate-badge" id="liveRateBox">
@@ -415,7 +416,7 @@
                     <span class="profit-text">實拿淨利潤總計：</span>
                     <span class="profit-text" id="outNetProfit">$ 0</span>
                 </div>
-                <div class="result-item" style="border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 6px;">
+                <div class="result-item" id="pureProfitRow" style="border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 6px;">
                     <span class="purple-profit-text">扣除應分攤成本後之純利：</span>
                     <span class="purple-profit-text" id="outPureProfit">$ 0 元</span>
                 </div>
@@ -431,7 +432,7 @@
 
 <script>
     let currentMode = 'live';
-    let globalPerItemShare = 0; // 全域變數，用來紀錄每件要分攤的台幣金額
+    let globalPerItemShare = 0; 
 
     window.onload = function() {
         fetch('https://open.er-api.com/v6/latest/JPY')
@@ -450,7 +451,6 @@
             });
     }
 
-    // 控制攤平控制面板的展開收合
     function toggleAmortizePanel() {
         const panel = document.getElementById('amortizePanel');
         const arrow = document.getElementById('amortizeArrow');
@@ -463,7 +463,6 @@
         }
     }
 
-    // 計算攤平
     function calculateAmortize() {
         const fixedCost = parseFloat(document.getElementById('fixedCost').value) || 0;
         const targetCount = parseFloat(document.getElementById('targetCount').value) || 0;
@@ -479,12 +478,12 @@
         document.getElementById('breakEvenPoint').innerText = '總淨利達 $' + fixedCost.toLocaleString() + ' 元';
         document.getElementById('amortizeResult').style.display = 'block';
 
-        // 如果下方已經算過結果，同步更新下方的扣除純利
         if(document.getElementById('resultPanel').style.display === 'block') {
             updatePureProfitDisplay();
         }
     }
 
+    // 模式切換核心邏輯
     function switchMode(mode) {
         currentMode = mode;
         const btnLive = document.getElementById('btnLive');
@@ -492,6 +491,9 @@
         const onlineFields = document.getElementById('onlineFields');
         const priceLabel = document.getElementById('priceLabel');
         const onlineShippingItems = document.querySelectorAll('.online-shipping-cost');
+        
+        const amortizeMainBox = document.getElementById('amortizeMainBox');
+        const pureProfitRow = document.getElementById('pureProfitRow');
 
         if (mode === 'live') {
             btnLive.classList.add('active');
@@ -499,12 +501,20 @@
             onlineFields.style.display = 'none';
             priceLabel.innerText = "日本商品含稅定價 (日幣 ¥)";
             onlineShippingItems.forEach(el => el.style.display = 'none');
+            
+            // 現場模式：顯示固定成本分攤規劃面板與利潤扣除欄位
+            amortizeMainBox.style.display = 'block';
+            pureProfitRow.style.display = 'flex';
         } else {
             btnLive.classList.remove('active');
             btnOnline.classList.add('active');
             onlineFields.style.display = 'block';
             priceLabel.innerText = "日本網站商品購物車總價 (日幣 ¥)";
             onlineShippingItems.forEach(el => el.style.display = 'flex');
+            
+            // 網購模式：完全隱藏固定成本規劃面板與利潤扣除欄位
+            amortizeMainBox.style.display = 'none';
+            pureProfitRow.style.display = 'none';
         }
     }
 
@@ -514,12 +524,13 @@
         document.getElementById('profitPercentGroup').style.display = (type === 'percent') ? 'block' : 'none';
     }
 
-    // 獨立更新純利欄位的函數
     function updatePureProfitDisplay() {
         const netProfitText = document.getElementById('outNetProfit').innerText;
-        // 把文字中的 $ 和 元、逗號拿掉，還原成數字
         const netProfitNum = parseInt(netProfitText.replace(/[^0-9-]/g, '')) || 0;
-        const pureProfit = netProfitNum - globalPerItemShare;
+        
+        // 只有現場模式需要扣除分攤成本，網購模式不扣除
+        const shareCost = (currentMode === 'live') ? globalPerItemShare : 0;
+        const pureProfit = netProfitNum - shareCost;
         
         document.getElementById('outPureProfit').innerText = '$ ' + pureProfit.toLocaleString() + ' 元';
     }
@@ -588,7 +599,6 @@
         document.getElementById('outServiceProfit').innerText = '$ ' + serviceProfit.toLocaleString();
         document.getElementById('outNetProfit').innerText = '$ ' + netProfit.toLocaleString() + ' 元';
 
-        // 執行更新「扣除應分攤成本後之純利」
         updatePureProfitDisplay();
 
         document.getElementById('resultPanel').style.display = 'block';
